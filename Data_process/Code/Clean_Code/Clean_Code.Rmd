@@ -1,0 +1,166 @@
+---
+title: "Clean_Code"
+author: "czx"
+date: "2024-03-29"
+output: html_document
+---
+
+```{r Package, warning = FALSE,message = FALSE}
+# 导入包
+library(tidyr)
+library(dplyr)
+library(stringr)
+```
+
+
+```{r}
+# 读取CSV文件
+raw_data <- read.csv("../../Raw_Data/Raw_Data.csv")
+
+# 首先删除RT小于100或大于5000的无效试次
+valid_data <- raw_data %>%
+  filter(!(justice1.RT < 100 | justice1.RT > 5000 | T1.RT < 100 | T1.RT > 5000))
+
+# 1. 计算不同社会距离下的拒绝率
+rejection_by_SD <- valid_data %>%
+  group_by(SD, T1.RESP, .drop = TRUE) %>%
+  summarise(rejection_count = n()) %>%
+  pivot_wider(names_from = T1.RESP, values_from = rejection_count) %>%
+  mutate(rejection_rate = j / (f + j))
+
+# 输出不同社会距离下的拒绝率统计信息
+summary_stats_SD <- rejection_by_SD %>%
+  group_by(SD, .drop = TRUE) %>%
+  summarise(mean_rejection_rate = mean(rejection_rate, na.rm = TRUE),
+            sd_rejection_rate = sd(rejection_rate, na.rm = TRUE))
+
+# 计算F值和sig值
+f_test_SD <- aov(rejection_rate ~ SD, data = rejection_by_SD)
+f_summary_SD <- summary(f_test_SD)
+
+# 输出结果
+print("不同社会距离下的拒绝率统计信息：")
+print(summary_stats_SD)
+print("F检验结果：")
+print(f_summary_SD)
+
+# 2. 计算不同分配方式下的拒绝率
+rejection_by_choice <- valid_data %>%
+  group_by(choise, T1.RESP, .drop = TRUE) %>%
+  summarise(rejection_count = n()) %>%
+  pivot_wider(names_from = T1.RESP, values_from = rejection_count) %>%
+  mutate(rejection_rate = j / (f + j))
+
+# 输出不同分配方式下的拒绝率统计信息
+summary_stats_choice <- rejection_by_choice %>%
+  group_by(choise, .drop = TRUE) %>%
+  summarise(mean_rejection_rate = mean(rejection_rate, na.rm = TRUE),
+            sd_rejection_rate = sd(rejection_rate, na.rm = TRUE))
+
+# 计算F值和sig值
+f_test_choice <- aov(rejection_rate ~ choise, data = rejection_by_choice)
+f_summary_choice <- summary(f_test_choice)
+
+# 输出结果
+print("不同分配方式下的拒绝率统计信息：")
+print(summary_stats_choice)
+print("F检验结果：")
+print(f_summary_choice)
+
+```
+
+
+```{r}
+# 加载必要的库
+library(dplyr)
+library(tidyr)
+
+# 读取CSV文件
+raw_data <- read.csv("../../Raw_Data/Raw_Data.csv")
+
+# 首先删除RT小于100或大于5000的无效试次
+valid_data <- raw_data %>%
+  filter(!(justice1.RT < 100 | justice1.RT > 5000 | T1.RT < 100 | T1.RT > 5000))
+
+# 1. 计算不同社会距离下的拒绝率
+rejection_by_SD <- valid_data %>%
+  group_by(SD, T1.RESP, .drop = TRUE) %>%
+  summarise(rejection_count = n()) %>%
+  pivot_wider(names_from = T1.RESP, values_from = rejection_count) %>%
+  mutate(rejection_rate = j / (f + j))
+
+# 输出不同社会距离下的拒绝率统计信息
+summary_stats_SD <- rejection_by_SD %>%
+  group_by(SD, .drop = TRUE) %>%
+  summarise(mean_rejection_rate = mean(rejection_rate, na.rm = TRUE),
+            sd_rejection_rate = sd(rejection_rate, na.rm = TRUE))
+
+# 计算F值和P值
+f_test_SD <- aov(rejection_rate ~ SD, data = rejection_by_SD)
+f_summary_SD <- summary(f_test_SD)
+
+# 提取F值并将其转换为数值型
+f_value_SD <- as.numeric(as.character(f_summary_SD[[1]]$F))
+p_value_SD <- pf(f_value_SD, f_test_SD$df1, f_test_SD$df2, lower.tail = FALSE)
+
+# 输出结果
+print("不同社会距离下的拒绝率统计信息：")
+print(summary_stats_SD)
+print("F检验结果：")
+cat("F值:", f_value_SD, "\n")
+cat("P值:", p_value_SD, "\n\n")
+
+# 2. 计算不同分配方式下的拒绝率
+rejection_by_choice <- valid_data %>%
+  group_by(choise, T1.RESP, .drop = TRUE) %>%
+  summarise(rejection_count = n()) %>%
+  pivot_wider(names_from = T1.RESP, values_from = rejection_count) %>%
+  mutate(rejection_rate = j / (f + j))
+
+# 输出不同分配方式下的拒绝率统计信息
+summary_stats_choice <- rejection_by_choice %>%
+  group_by(choise, .drop = TRUE) %>%
+  summarise(mean_rejection_rate = mean(rejection_rate, na.rm = TRUE),
+            sd_rejection_rate = sd(rejection_rate, na.rm = TRUE))
+
+# 计算F值和P值
+f_test_choice <- aov(rejection_rate ~ choise, data = rejection_by_choice)
+f_summary_choice <- summary(f_test_choice)
+
+# 提取F值并将其转换为数值型
+f_value_choice <- as.numeric(as.character(f_summary_choice[[1]]$F))
+p_value_choice <- pf(f_value_choice, f_test_choice$df1, f_test_choice$df2, lower.tail = FALSE)
+
+# 输出结果
+print("不同分配方式下的拒绝率统计信息：")
+print(summary_stats_choice)
+print("F检验结果：")
+cat("F值:", f_value_choice, "\n")
+cat("P值:", p_value_choice, "\n")
+
+```
+
+```{r}
+# 读取CSV文件
+raw_data <- read.csv("../../Raw_Data/Raw_Data.csv")
+
+# 首先删除RT小于100或大于5000的无效试次
+valid_data <- raw_data %>%
+  filter(!(justice1.RT < 100 | justice1.RT > 5000 | T1.RT < 100 | T1.RT > 5000))
+# 2. 计算不同社会距离下的拒绝次数统计
+rejection_counts_sd <- aggregate(valid_data$T1.RESP, 
+                                 by = list(valid_data$SD), 
+                                 FUN = function(x) sum(x == "j"))
+
+# 计算拒绝次数的均值、标准差
+rejection_stats_sd <- cbind(mean(rejection_counts_sd$x),
+                            sd(rejection_counts_sd$x))
+colnames(rejection_stats_sd) <- c("Mean", "SD")
+
+# 输出结果
+print("拒绝次数的统计数据按社会距离：")
+print(rejection_counts_sd)
+print("拒绝次数的统计数据按社会距离的均值、标准差：")
+print(rejection_stats_sd)
+```
+
